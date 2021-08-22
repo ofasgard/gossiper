@@ -6,6 +6,10 @@ import "time"
 import "math/rand"
 
 func main() {
+	simpletest()
+}
+
+func simpletest() {
 	rand.Seed(time.Now().UnixNano())
 	sender := siplib.NewSIPRecipient("sipfabulous", "2000", "192.168.1.220", 5060)
 	receiver := siplib.NewSIPRecipient("sipferrous", "user2", "server.com", 5060)
@@ -16,10 +20,15 @@ func main() {
 	fmt.Println(err)
 	err = siplib.SendUDP(conn, req)
 	fmt.Println(err)
-	res,err := siplib.RecvUDP(conn)
+	result,err := siplib.RecvUDP(conn)
 	fmt.Println(err)
 	
-	fmt.Println(res)
+	resp,err := siplib.NewSIPResponse(result)
+	fmt.Println(err)
+	fmt.Println(resp.Status)
+	fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Headers)
+	fmt.Println(resp.Body)
 	
 }
 

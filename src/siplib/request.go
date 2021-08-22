@@ -32,8 +32,6 @@ func (r SIPRequest) Generate() string {
 	return out
 }
 
-// Methods used to assist in the generation of SIP requests.
-
 func NewSIPRequest() SIPRequest {
 	req := SIPRequest{}
 	req.InitHeaders()
@@ -47,6 +45,8 @@ func (r *SIPRequest) InitHeaders() {
 		r.SetHeader(header, "")
 	}
 }
+
+// Methods used to assist in the generation of SIP requests.
 
 func (r *SIPRequest) SetRequestLine(proto string, method string, host string, extension string) {
 	r.Proto = proto

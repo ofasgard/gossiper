@@ -51,7 +51,7 @@ func RecvUDP(conn *net.UDPConn) (string,error) {
 	return output, nil
 }
 
-// Create a TCP connection.
+// Create a TCP connection using source port 5060.
 // If we can't nab it, use a random source port.
 
 func ConnectTCP(target_host string, target_port int) (*net.TCPConn,error) {
