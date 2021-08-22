@@ -2,93 +2,86 @@ package siplib
 
 import "fmt"
 
-// Struct used to keep track of a SIP request.
+// Struct used to construct a SIP request.
 
 type SIPRequest struct {
 	Proto string
-	Host string
 	Method string
-	Extension string
 	URI string
-	PreHeaders map[string]string
+	SIPVersion string
 	Headers map[string]string
-	PostHeaders map[string]string
 	Body string
+	
+	sender SIPRecipient
+	receiver SIPRecipient
 }
-
-// Just set the request up with basic info.
-
-func (r *SIPRequest) Init(proto string, host string, method string, extension string) {
-	r.Proto = proto
-	r.Host = host
-	r.Method = method
-	r.Extension = extension
-	r.URI = GenerateURI(host, extension)
-	r.PreHeaders = make(map[string]string)
-	r.Headers = make(map[string]string)
-	r.PostHeaders = make(map[string]string)
-}
-
-// Initialise some default headers suitable for an OPTIONS request - these won't be right for every request!
-
-func (r *SIPRequest) DefaultHeaders() {
-	r.Headers["Accept"] = "application/sdp"
-	r.Headers["User-Agent"] = "friendly-neighbourhood-scanner"
-	r.Headers["Max-Forwards"] = "70"
-	r.Headers["Cseq"] = fmt.Sprintf("1 %s", r.Method)
-	r.Headers["Content-Length"] = fmt.Sprintf("%d", len(r.Body))
-	r.Headers["Call-ID"] = random_number_string(24)
-	r.Headers["From"] = fmt.Sprintf("\"sipfurious\"<sip:100@1.1.1.1>;tag=%s", random_number_string(46))
-	r.Headers["To"] = "\"sipfurious\"<sip:100@1.1.1.1>"
-}
-
-// Set the Via and Contact headers with your local host/port (or the one you want to spoof).
-
-func (r *SIPRequest) SetContactHeaders(srchost string, srcport int) {
-	branch_id := random_number_string(10)
-	r.PreHeaders["Via"] = fmt.Sprintf("SIP/2.0/%s %s:%d;branch=z9hG4bK-%s;rport", r.Proto, srchost, srcport, branch_id)
-	r.Headers["Contact"] = fmt.Sprintf("sip:%s@%s:%d", r.Extension, srchost, srcport)
-}
-
-// Set the From and To headers manually with non-default values.
-
-func (r *SIPRequest) SetRecipients(from_name string, from_uri string, to_name string, to_uri string) {
-	r.Headers["From"] = fmt.Sprintf("\"%s\"<%s>;tag=%s", from_name, from_uri, random_number_string(46))
-	r.Headers["To"] = fmt.Sprintf("\"%s\"<%s>", to_name, to_uri)
-}
-
-// Include a requestbody and recalculate Content-Length header.
-
-func (r *SIPRequest) SetBody (body string) {
-	r.Body = body
-	r.Headers["Content-Length"] = fmt.Sprintf("%d", len(r.Body))
-}
-
-// Generate the request.
 
 func (r SIPRequest) Generate() string {
-	output := fmt.Sprintf("%s %s SIP/2.0\r\n", r.Method, r.URI)
-	for name,value := range r.PreHeaders {
-		output += fmt.Sprintf("%s: %s\r\n", name, value)
+	out := ""
+	//Generate request line.
+	out += fmt.Sprintf("%s %s %s\r\n", r.Method, r.URI, r.SIPVersion)
+	//Generate header lines.
+	for key, value := range r.Headers {
+		out += fmt.Sprintf("%s: %s\n", key, value)
 	}
-	for name,value := range r.Headers {
-		output += fmt.Sprintf("%s: %s\r\n", name, value)
+	//The body of a request is optional.
+	if (len(r.Body) > 0) {
+		out += "\r\n"
+		out += r.Body
 	}
-	for name,value := range r.PostHeaders {
-		output += fmt.Sprintf("%s: %s\r\n", name, value)
-	}
-	output += "\r\n"
-	output += r.Body
-	return output
+	return out
 }
 
-// Helper function to generate a SIP URI from host and extension.
+// Methods used to assist in the generation of SIP requests.
 
-func GenerateURI(host string, extension string) string {
-	if (extension == "") {
-		return fmt.Sprintf("sip:%s", host)
-	} else {
-		return fmt.Sprintf("sip:%s@%s", extension, host)
+func NewSIPRequest() SIPRequest {
+	req := SIPRequest{}
+	req.InitHeaders()
+	return req
+}
+
+func (r *SIPRequest) InitHeaders() {
+	r.Headers = make(map[string]string)
+	required_headers := []string{"Via", "To", "From", "Call-ID", "CSeq", "Contact", "Content-Type", "Content-Length"}
+	for _,header := range required_headers {
+		r.SetHeader(header, "")
 	}
 }
+
+func (r *SIPRequest) SetRequestLine(proto string, method string, host string, extension string) {
+	r.Proto = proto
+	r.Method = method
+	r.URI = GenerateURI(host, extension)
+	r.SIPVersion = "SIP/2.0"
+}
+
+func (r *SIPRequest) SetHeader(header string, value string) {
+	r.Headers[header] = value
+}
+
+func (r *SIPRequest) SetBody(body string) {
+	r.Body = body
+	r.SetHeader("Content-Length", fmt.Sprintf("%d", len(r.Body)))
+}
+
+// Functions for generating "template" requests for various methods.
+
+func NewOptionsRequest(proto string, sender SIPRecipient, receiver SIPRecipient) SIPRequest {
+	req := NewSIPRequest()
+	req.SetRequestLine(proto, "OPTIONS", receiver.hostname, receiver.extension)
+	req.SetHeader("Accept", "application/sdp")
+	req.SetHeader("Content-Type", "application/sdp")
+	req.SetHeader("User-Agent", "Avaya SIP R2.2 Endpoint Brcm Callctrl/1.5.1.0 MxSF/v3.2.6.26:")
+	req.SetHeader("To", fmt.Sprintf("%s <%s>", receiver.name, receiver.GetURI()))
+	req.SetHeader("From", fmt.Sprintf("%s <%s>;tag=%s", sender.name, sender.GetURI(), random_number_string(46)))
+	req.SetHeader("Via", fmt.Sprintf("%s/%s %s:%d;branch=%s", req.SIPVersion, req.Proto, sender.hostname, sender.port, random_number_string(10)))
+	req.SetHeader("Contact", fmt.Sprintf("%s <%s>", sender.name, sender.GetURI()))
+	req.SetHeader("CSeq", fmt.Sprintf("1 %s", req.Method))
+	req.SetHeader("Call-ID", random_number_string(24))
+	req.SetHeader("Max-Forwards", "70")
+	req.SetHeader("Content-Length", "0")
+	return req
+}
+
+
 

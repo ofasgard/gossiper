@@ -38,3 +38,13 @@ func GenerateHexUUID(length int) string {
 	uuid := GenerateUUID(length)
 	return fmt.Sprintf("%x", uuid)
 }
+
+// Helper function to generate a SIP URI from a hostname and extension/username.
+
+func GenerateURI(host string, extension string) string {
+	if (extension == "") {
+		return fmt.Sprintf("sip:%s", host)
+	} else {
+		return fmt.Sprintf("sip:%s@%s", extension, host)
+	}
+}
