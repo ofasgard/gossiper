@@ -16,9 +16,10 @@ func main() {
 func simpletest() {
 	rand.Seed(time.Now().UnixNano())
 	
-	results := siplib.ScanOptionsUDP([]string{"192.168.1.8", "192.168.1.8", "192.168.1.8"}, 5060, 10, 5)
+	results := siplib.ScanOptionsUDP([]string{"192.168.1.8", "127.0.0.1"}, 5060, 10, 5)
 	for target, result := range results {
 		fmt.Printf("%s: %s\n", target, result)
 	}
 
 }
+

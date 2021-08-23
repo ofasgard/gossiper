@@ -34,9 +34,9 @@ func MapOptionsTCP(target string, port int, timeout int, sender SIPRecipient, re
 	return "[NONE]",nil
 }
 
-// Multi-threaded OPTIONS scan via UDP.
+// Multi-threaded OPTIONS scan via any of the above transfer protocols.
 
-func ScanOptionsUDP(targets []string, port int, timeout int, threads int) map[string]string {
+func ScanOptions(targets []string, port int, timeout int, threads int, proto int) map[string]string {
 	// Anonymous function for workers
 	worker := func(input chan string, output chan string, port int, timeout int) {
 		jobs := []string{}
@@ -50,7 +50,14 @@ func ScanOptionsUDP(targets []string, port int, timeout int, threads int) map[st
 		for _,job := range jobs {
 			sender := NewSIPRecipient("sipfurious", "100", "1.1.1.1", 5060)
 			receiver := NewSIPRecipient("sipfurious", "200", job, port)
-			res,err := MapOptionsUDP(job, port, timeout, sender, receiver)
+			var res string
+			var err error
+			switch proto {
+				case 0:
+					res,err = MapOptionsUDP(job, port, timeout, sender, receiver)
+				case 1:
+					res,err = MapOptionsTCP(job, port, timeout, sender, receiver)
+			}
 			if err == nil {
 				output <- res
 				output <- job
@@ -96,4 +103,14 @@ func ScanOptionsUDP(targets []string, port int, timeout int, threads int) map[st
 		}
 	}
 	return output
+}
+
+// Some helper functions to cut down on the number of parameters you need to pass. Is there a better way to do this?
+
+func ScanOptionsUDP(targets []string, port int, timeout int, threads int) map[string]string {
+	return ScanOptions(targets, port, timeout, threads, 0)
+}
+
+func ScanOptionsTCP(targets []string, port int, timeout int, threads int) map[string]string {
+	return ScanOptions(targets, port, timeout, threads, 1)
 }
