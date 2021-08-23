@@ -32,19 +32,13 @@ func main() {
 	module := flag.Arg(0)
 	protocol := flag.Arg(1)
 	targets := parse_target(flag.Arg(2))
-	
-	//temporary test stuff	
-	results := siplib.ScanOptionsUDP(targets, port, timeout, threads)
-	for target, result := range results {
-		fmt.Printf("%s: %s\n", target, result)
-	}
 
 	//defer to the correct function based on arguments
 	switch protocol {
 		case "udp":
 			switch module {
 				case "map":
-					fmt.Fprintf(os.Stderr, "UDP mapping is not yet implemented.\n")
+					map_udp(targets, port, timeout, threads)
 					return
 				case "war":
 					fmt.Fprintf(os.Stderr, "UDP wardialling is not yet implemented.\n")
@@ -94,4 +88,12 @@ func usage() {
 	fmt.Fprintf(w, "\t--threads <#>\tNumber of hosts to target simultaneously. [DEFAULT: 5]\n")
 	w.Flush()
 	fmt.Fprintf(os.Stderr, "\n\nExample: %s map udp 192.168.0.20\n", os.Args[0])
+}
+
+func map_udp(targets []string, port int, timeout int, threads int) {
+	//temporary test stuff	
+	results := siplib.ScanOptionsUDP(targets, port, timeout, threads)
+	for target, result := range results {
+		fmt.Printf("%s: %s\n", target, result)
+	}
 }
