@@ -23,21 +23,60 @@ func main() {
 	timeout := *timeout_ptr
 	threads := *threads_ptr
 	port := *port_ptr
+
 	//validate args
 	if flag.NArg() < 3 {
 		usage()
 		return
 	}
-	method := flag.Arg(0)
+	module := flag.Arg(0)
 	protocol := flag.Arg(1)
 	targets := parse_target(flag.Arg(2))
-
+	
 	//temporary test stuff	
-	protocol = method
-	method = protocol
 	results := siplib.ScanOptionsUDP(targets, port, timeout, threads)
 	for target, result := range results {
 		fmt.Printf("%s: %s\n", target, result)
+	}
+
+	//defer to the correct function based on arguments
+	switch protocol {
+		case "udp":
+			switch module {
+				case "map":
+					fmt.Fprintf(os.Stderr, "UDP mapping is not yet implemented.\n")
+					return
+				case "war":
+					fmt.Fprintf(os.Stderr, "UDP wardialling is not yet implemented.\n")
+					return
+				case "crack":
+					fmt.Fprintf(os.Stderr, "UDP cracking is not yet implemented.\n")
+					return
+				default:
+					usage()
+					return
+			}
+		case "tcp":
+			switch module {
+				case "map":
+					fmt.Fprintf(os.Stderr, "TCP mapping is not yet implemented.\n")
+					return
+				case "war":
+					fmt.Fprintf(os.Stderr, "TCP wardialling is not yet implemented.\n")
+					return
+				case "crack":
+					fmt.Fprintf(os.Stderr, "TCP cracking is not yet implemented.\n")
+					return
+				default:
+					usage()
+					return
+			}
+		case "tls":
+			fmt.Fprintf(os.Stderr, "TLS is not yet implemented.\n")
+			return
+		default:
+			usage()
+			return
 	}
 }
 
