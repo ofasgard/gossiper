@@ -53,7 +53,7 @@ func main() {
 		case "tcp":
 			switch module {
 				case "map":
-					fmt.Fprintf(os.Stderr, "TCP mapping is not yet implemented.\n")
+					map_tcp(targets, port, timeout, threads)
 					return
 				case "war":
 					fmt.Fprintf(os.Stderr, "TCP wardialling is not yet implemented.\n")
@@ -92,6 +92,23 @@ func usage() {
 
 func map_udp(targets []string, port int, timeout int, threads int) {
 	results := siplib.ScanOptionsUDP(targets, port, timeout, threads)
+	fmt.Println("")
+	if len(results) > 0 {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+		fmt.Fprintf(w, "Target\tPort\tServer Header\n")
+		fmt.Fprintf(w, "\t\t\t\n")
+		for target, result := range results {
+			fmt.Fprintf(w, "%s\t%d\t%s\n", target, port, result)
+		}
+		w.Flush()
+	} else {
+		fmt.Println("No results found.")
+	}
+}
+
+func map_tcp(targets []string, port int, timeout int, threads int) {
+	results := siplib.ScanOptionsTCP(targets, port, timeout, threads)
 	fmt.Println("")
 	if len(results) > 0 {
 		w := new(tabwriter.Writer)
