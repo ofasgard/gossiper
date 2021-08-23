@@ -35,8 +35,8 @@ func SendUDP(conn *net.UDPConn, req SIPRequest) error {
 
 func RecvUDP(conn *net.UDPConn) (string,error) {
 	output := ""
-	buf := make([]byte, 8192)
 	for {
+		buf := make([]byte, 8192)
 		n,err := conn.Read(buf)
 		if err != nil {
 			return output,err
@@ -83,8 +83,8 @@ func SendTCP(conn *net.TCPConn, req SIPRequest) error {
 
 func RecvTCP(conn *net.TCPConn) (string,error) {
 	output := ""
-	buf := make([]byte, 8192)
 	for {
+		buf := make([]byte, 8192)
 		n,err := conn.Read(buf)
 		if err != nil {
 			return output,err
