@@ -52,6 +52,9 @@ func RecvUDP(conn *net.UDPConn) (string,error) {
 	return output, nil
 }
 
+// Tie the above functionality together into a single function that sends a SIPRequest and returns a SIPResponse over UDP.
+// Implements timeouts and parses the received responses to find the one that matches.
+
 func RequestUDP(target string, port int, timeout int, req SIPRequest) (SIPResponse,error) {
 	conn,err := ConnectUDP(target, port)
 	if err != nil {
