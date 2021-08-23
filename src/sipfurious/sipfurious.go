@@ -91,9 +91,18 @@ func usage() {
 }
 
 func map_udp(targets []string, port int, timeout int, threads int) {
-	//temporary test stuff	
 	results := siplib.ScanOptionsUDP(targets, port, timeout, threads)
-	for target, result := range results {
-		fmt.Printf("%s: %s\n", target, result)
+	fmt.Println("")
+	if len(results) > 0 {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+		fmt.Fprintf(w, "Target\tPort\tServer Header\n")
+		fmt.Fprintf(w, "\t\t\t\n")
+		for target, result := range results {
+			fmt.Fprintf(w, "%s\t%d\t%s\n", target, port, result)
+		}
+		w.Flush()
+	} else {
+		fmt.Println("No results found.")
 	}
 }
