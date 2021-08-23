@@ -1,7 +1,5 @@
 package siplib
 
-import "fmt"
-
 // Single-threaded OPTIONS scan via UDP.
 
 func MapOptionsUDP(target string, port int, timeout int, sender SIPRecipient, receiver SIPRecipient) (string,error) {
@@ -38,7 +36,7 @@ func MapOptionsTCP(target string, port int, timeout int, sender SIPRecipient, re
 
 // Multi-threaded OPTIONS scan via UDP.
 
-func ScanOptionsUDP(targets []string, port int, timeout int, threads int) {
+func ScanOptionsUDP(targets []string, port int, timeout int, threads int) map[string]string {
 	// Anonymous function for workers
 	worker := func(input chan string, output chan string, port int, timeout int) {
 		jobs := []string{}
@@ -55,6 +53,7 @@ func ScanOptionsUDP(targets []string, port int, timeout int, threads int) {
 			res,err := MapOptionsUDP(job, port, timeout, sender, receiver)
 			if err == nil {
 				output <- res
+				output <- job
 			}
 		}
 		//Close the output channel.
@@ -89,12 +88,12 @@ func ScanOptionsUDP(targets []string, port int, timeout int, threads int) {
 	output := make(map[string]string)
 	for _,channel := range output_channels {
 		for {
-			val,ok := <-channel
+			result,ok := <-channel
 			if !ok { break }
-			output["unknown"] = val
+			target,ok := <- channel
+			if !ok { break }
+			output[target] = result
 		}
 	}
-	fmt.Println(output)
-	
-	//needs a way to correlate output with targets...
+	return output
 }
