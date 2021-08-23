@@ -14,10 +14,9 @@ func simpletest() {
 	
 	sender := siplib.NewSIPRecipient("sipfurious", "2000", "1.3.3.7", 5060)
 	receiver := siplib.NewSIPRecipient("Joe Jones", "user2", "192.168.1.8", 5060)
-	req := siplib.NewOptionsRequest("UDP", sender, receiver)
+	res,err := siplib.MapOptionsUDP("192.168.1.8", 5060, 10, sender, receiver)
 	
-	resp,err := siplib.RequestUDP("192.168.1.8", 5060, 10, req)
-	fmt.Println(resp)
+	fmt.Println(res)
 	fmt.Println(err)
 }
 
