@@ -19,7 +19,6 @@ func simpletest() {
 	resp,err := siplib.RequestUDP("192.168.1.8", 5060, 10, req)
 	fmt.Println(resp)
 	fmt.Println(err)
-	
 }
 
 // http://siptutorial.net/SIP/request.html

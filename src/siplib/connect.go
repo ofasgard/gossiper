@@ -137,4 +137,41 @@ func RecvTCP(conn *net.TCPConn) (string,error) {
 	return output,nil
 }
 
+// Tie the above functionality together into a single function that sends a SIPRequest and returns a SIPResponse over TCP.
+// Implements timeouts and parses the received responses to find the one that matches.
+
+func RequestTCP(target string, port int, timeout int, req SIPRequest) (SIPResponse,error) {
+	conn,err := ConnectTCP(target, port)
+	if err != nil {
+		return SIPResponse{},err
+	}
+	
+	defer conn.Close()
+	deadline := time.Now().Add(time.Duration(timeout) * time.Second)
+	conn.SetDeadline(deadline)
+	
+	err = SendTCP(conn, req)
+	if err != nil {
+		return SIPResponse{},err
+	}
+	
+	//receive and parse responses until one matches or we time out
+	call_id := ""
+	if _, ok := req.Headers["Call-ID"]; ok {
+		call_id = req.Headers["Call-ID"]
+	}
+	for {
+		resp,err := RecvTCP(conn)
+		if err != nil {
+			return SIPResponse{},err
+		}
+		parsed,err := NewSIPResponse(resp)
+		if val,ok := parsed.Headers["Call-ID"]; ok && (err == nil) {
+			if val == call_id {
+				return parsed,nil
+			}
+		}
+	}
+}
+
 
